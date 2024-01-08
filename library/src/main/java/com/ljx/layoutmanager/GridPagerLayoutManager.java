@@ -556,10 +556,10 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
             if (fullSpan) spanIndex = 0;
             int offsetPosition = isVertical ? row * columnCount + spanIndex : spanIndex * columnCount + column;
             int curPosition = fromPosition + offsetPosition;
-            layoutState.mCurrentPosition = curPosition;
             int spanSize = 1;
-            if (layoutState.hasMore(state) && curPosition < toPosition) {
-                View view = layoutState.next(recycler);
+            if (curPosition < toPosition) {
+                layoutState.mCurrentPosition = curPosition;
+                View view = recycler.getViewForPosition(curPosition);
                 LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
                 layoutParams.pageIndex = page;
                 int rowSpanSize = fullSpan ? rowCount : 1;
