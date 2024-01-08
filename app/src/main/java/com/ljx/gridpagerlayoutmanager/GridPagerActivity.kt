@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ljx.gridpagerlayoutmanager.base.BaseAdapter
 import com.ljx.gridpagerlayoutmanager.databinding.GridPagerActivityBinding
 import com.ljx.gridpagerlayoutmanager.databinding.GridPagerAdapterBinding
-import com.ljx.layoutmanager.GridPagerLayoutManager
+import androidx.recyclerview.widget.GridPagerLayoutManager
 
 /**
  * User: ljx

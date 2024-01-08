@@ -10,6 +10,7 @@ import android.view.View;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridPagerLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback;
 import androidx.viewpager2.widget.ViewPager2.ScrollState;
@@ -225,7 +226,7 @@ public final class ScrollEventAdapter extends RecyclerView.OnScrollListener {
     /**
      * Let the adapter know a programmatic scroll was initiated.
      */
-    void notifyProgrammaticScroll(int target, boolean smooth) {
+    public void notifyProgrammaticScroll(int target, boolean smooth) {
         mAdapterState = smooth
             ? STATE_IN_PROGRESS_SMOOTH_SCROLL
             : STATE_IN_PROGRESS_IMMEDIATE_SCROLL;
@@ -275,14 +276,14 @@ public final class ScrollEventAdapter extends RecyclerView.OnScrollListener {
         mCallback = callback;
     }
 
-    int getScrollState() {
+    public int getScrollState() {
         return mScrollState;
     }
 
     /**
      * @return {@code true} if there is no known scroll in progress
      */
-    boolean isIdle() {
+    public boolean isIdle() {
         return mScrollState == SCROLL_STATE_IDLE;
     }
 
@@ -323,7 +324,7 @@ public final class ScrollEventAdapter extends RecyclerView.OnScrollListener {
      *
      * @return The current scroll position of the ViewPager, relative to its width
      */
-    double getRelativeScrollPosition() {
+    public double getRelativeScrollPosition() {
         updateScrollEventValues();
         return mScrollValues.mPosition + (double) mScrollValues.mOffset;
     }

@@ -35,7 +35,7 @@
             android:background="#88ff0000"
             android:orientation="horizontal"
             app:columnCount="4"
-            app:layoutManager="com.ljx.layoutmanager.GridPagerLayoutManager"
+            app:layoutManager="androidx.recyclerview.widget.GridPagerLayoutManager"
             app:layout_constraintTop_toBottomOf="@id/tab_layout"
             app:reverseLayout="false"
             app:rowCount="2"

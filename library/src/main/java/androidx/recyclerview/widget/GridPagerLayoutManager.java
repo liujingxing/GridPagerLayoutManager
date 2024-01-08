@@ -1,4 +1,4 @@
-package com.ljx.layoutmanager;
+package androidx.recyclerview.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -19,8 +19,6 @@ import android.view.animation.Interpolator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
-import androidx.recyclerview.widget.OrientationHelper;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.Adapter;
 import androidx.recyclerview.widget.RecyclerView.Recycler;
 import androidx.recyclerview.widget.RecyclerView.State;
@@ -32,6 +30,9 @@ import com.google.android.material.tabs.IndicatorObserver;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutObserver;
 import com.google.android.material.tabs.TabLayoutObserver.TabConfigurationStrategy;
+import com.ljx.layoutmanager.CompositeOnPageChangeCallback;
+import com.ljx.layoutmanager.R;
+import com.ljx.layoutmanager.ScrollEventAdapter;
 import com.ljx.view.IndicatorView;
 
 import java.util.ArrayList;
@@ -54,8 +55,6 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
     private final DecelerateInterpolator mDecelerateInterpolator = new DecelerateInterpolator();
     private final LayoutChunkResult mLayoutChunkResult = new LayoutChunkResult();
     private LayoutState mLayoutState;
-    private RecyclerView mRecyclerView = null;
-
     private OrientationHelper mOrientationHelper;
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private SavedState mPendingSavedState = null;
@@ -76,7 +75,7 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
     private boolean mReverseLayout;
     private boolean mShouldReverseLayout = false;
     private Adapter<?> mAdapter;
-    private TabLayoutObserver gridPagerMediator;
+    private TabLayoutObserver tabLayoutMediator;
     private IndicatorObserver indicatorObserver;
 
     public GridPagerLayoutManager(int rowCount, int columnCount) {
@@ -105,6 +104,29 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
         initialize();
     }
 
+    @Override
+    void setRecyclerView(RecyclerView recyclerView) {
+        super.setRecyclerView(recyclerView);
+        mAdapter = recyclerView.getAdapter();
+    }
+
+    @Override
+    public void onAdapterChanged(@Nullable Adapter oldAdapter, @Nullable Adapter newAdapter) {
+        super.onAdapterChanged(oldAdapter, newAdapter);
+        mAdapter = newAdapter;
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.onAdapterChanged(oldAdapter, newAdapter);
+        }
+    }
+
+    public Adapter<?> getAdapter() {
+        return mAdapter;
+    }
+
+    public int getCurrentQueueItem() {
+        return getQueueIndex(mCurrentPage);
+    }
+
     private int getQueueIndex(int pageIndex) {
         if (queueBorders == null) return -1;
         for (int i = queueBorders.length - 1; i >= 0; i--) {
@@ -113,11 +135,6 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
             }
         }
         return -1;
-    }
-
-
-    public int getCurrentItem() {
-        return getQueueIndex(mCurrentPage);
     }
 
     private void initialize() {
@@ -199,8 +216,10 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
             indicatorObserver.detach();
             indicatorObserver = null;
         }
-        indicatorObserver = new IndicatorObserver(indicatorView, this);
-        indicatorObserver.attach();
+        if (indicatorView != null) {
+            indicatorObserver = new IndicatorObserver(indicatorView, this);
+            indicatorObserver.attach();
+        }
     }
 
     public void attach(TabLayout tabLayout, TabConfigurationStrategy tabConfigurationStrategy) {
@@ -212,12 +231,14 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
     }
 
     public void attach(TabLayout tabLayout, boolean autoRefresh, boolean smoothScroll, TabConfigurationStrategy tabConfigurationStrategy) {
-        if (gridPagerMediator != null) {
-            gridPagerMediator.detach();
-            gridPagerMediator = null;
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
+            tabLayoutMediator = null;
         }
-        gridPagerMediator = new TabLayoutObserver(tabLayout, this, autoRefresh, smoothScroll, tabConfigurationStrategy);
-        gridPagerMediator.attach();
+        if (tabLayout != null) {
+            tabLayoutMediator = new TabLayoutObserver(tabLayout, this, autoRefresh, smoothScroll, tabConfigurationStrategy);
+            tabLayoutMediator.attach();
+        }
     }
 
     public boolean getReverseLayout() {
@@ -236,7 +257,7 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
         return mShouldReverseLayout;
     }
 
-    protected boolean isLayoutRTL() {
+    public boolean isLayoutRTL() {
         return getLayoutDirection() == ViewCompat.LAYOUT_DIRECTION_RTL;
     }
 
@@ -314,7 +335,6 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
     public void onAttachedToWindow(RecyclerView view) {
         super.onAttachedToWindow(view);
         view.addOnScrollListener(mScrollEventAdapter);
-        mRecyclerView = view;
         //处理滑动
         view.setOnFlingListener(mOnFlingListener);
         //设置滚动监听，记录滚动的状态，和总的偏移量
@@ -835,16 +855,6 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
             i++;
         }
         return setQueueTails(queueTails, fullSpanIndexes);
-    }
-
-    @Override
-    public void onAdapterChanged(@Nullable Adapter oldAdapter, @Nullable Adapter newAdapter) {
-        super.onAdapterChanged(oldAdapter, newAdapter);
-        mAdapter = newAdapter;
-    }
-
-    public Adapter<?> getAdapter() {
-        return mAdapter != null ? mAdapter : mRecyclerView != null ? mRecyclerView.getAdapter() : null;
     }
 
     @Override

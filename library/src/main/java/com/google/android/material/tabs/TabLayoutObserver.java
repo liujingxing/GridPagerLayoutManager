@@ -8,7 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.ljx.layoutmanager.GridPagerLayoutManager;
+import androidx.recyclerview.widget.GridPagerLayoutManager;
+import androidx.recyclerview.widget.RecyclerView.Adapter;
 
 import java.lang.ref.WeakReference;
 
@@ -41,6 +42,10 @@ public final class TabLayoutObserver {
         this.tabConfigurationStrategy = tabConfigurationStrategy;
     }
 
+    public void onAdapterChanged(@Nullable Adapter oldAdapter, @Nullable Adapter newAdapter) {
+
+    }
+
     public void attach() {
         if (attached) {
             throw new IllegalStateException("GridPagerMediator is already attached");
@@ -71,7 +76,7 @@ public final class TabLayoutObserver {
         populateTabsFromPagerAdapter();
 
         // Now update the scroll position to match the ViewPager's current item
-        tabLayout.setScrollPosition(gridPager.getCurrentItem(), 0f, true);
+        tabLayout.setScrollPosition(gridPager.getCurrentQueueItem(), 0f, true);
     }
 
 
@@ -111,7 +116,7 @@ public final class TabLayoutObserver {
             // Make sure we reflect the currently set ViewPager item
             if (adapterCount > 0) {
                 int lastItem = tabLayout.getTabCount() - 1;
-                int currItem = Math.min(gridPager.getCurrentItem(), lastItem);
+                int currItem = Math.min(gridPager.getCurrentQueueItem(), lastItem);
                 if (currItem != tabLayout.getSelectedTabPosition()) {
                     tabLayout.selectTab(tabLayout.getTabAt(currItem));
                 }

@@ -1,6 +1,6 @@
 package com.google.android.material.tabs
 
-import com.ljx.layoutmanager.GridPagerLayoutManager
+import androidx.recyclerview.widget.GridPagerLayoutManager
 import com.ljx.view.IndicatorView
 
 /**

@@ -5,7 +5,7 @@ import androidx.annotation.Px;
 import androidx.viewpager2.widget.ViewPager2;
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback;
 
-import com.ljx.layoutmanager.GridPagerLayoutManager.OnPageChangeListener;
+import androidx.recyclerview.widget.GridPagerLayoutManager.OnPageChangeListener;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -16,25 +16,25 @@ import java.util.List;
  * Date: 2023/12/5
  * Time: 14:07
  */
-final class CompositeOnPageChangeCallback extends OnPageChangeListener {
+public final class CompositeOnPageChangeCallback extends OnPageChangeListener {
     @NonNull
     private final List<OnPageChangeCallback> mCallbacks;
 
-    CompositeOnPageChangeCallback(int initialCapacity) {
+    public CompositeOnPageChangeCallback(int initialCapacity) {
         mCallbacks = new ArrayList<>(initialCapacity);
     }
 
     /**
      * Adds the given callback to the list of subscribers
      */
-    void addOnPageChangeCallback(OnPageChangeCallback callback) {
+    public void addOnPageChangeCallback(OnPageChangeCallback callback) {
         mCallbacks.add(callback);
     }
 
     /**
      * Removes the given callback from the list of subscribers
      */
-    void removeOnPageChangeCallback(OnPageChangeCallback callback) {
+    public void removeOnPageChangeCallback(OnPageChangeCallback callback) {
         mCallbacks.remove(callback);
     }
 
