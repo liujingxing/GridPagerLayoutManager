@@ -77,6 +77,7 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
     private Adapter<?> mAdapter;
     private TabLayoutObserver tabLayoutMediator;
     private IndicatorObserver indicatorObserver;
+    private DataSetChangeObserver mDataSetChangeObserver;
 
     public GridPagerLayoutManager(int rowCount, int columnCount) {
         this(rowCount, columnCount, RecyclerView.HORIZONTAL, false);
@@ -107,15 +108,38 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
     @Override
     void setRecyclerView(RecyclerView recyclerView) {
         super.setRecyclerView(recyclerView);
-        mAdapter = recyclerView.getAdapter();
+        if (recyclerView == null) {
+            if (mAdapter != null && mDataSetChangeObserver != null) {
+                mAdapter.unregisterAdapterDataObserver(mDataSetChangeObserver);
+            }
+            queueTailIndexes = null;
+            mAdapter = null;
+            return;
+        }
+        setAdapter(recyclerView.getAdapter());
     }
 
     @Override
     public void onAdapterChanged(@Nullable Adapter oldAdapter, @Nullable Adapter newAdapter) {
         super.onAdapterChanged(oldAdapter, newAdapter);
+        setAdapter(newAdapter);
+    }
+
+    private void setAdapter(Adapter<?> newAdapter) {
+        Adapter<?> oldAdapter = mAdapter;
+        if (oldAdapter != null && mDataSetChangeObserver != null) {
+            oldAdapter.unregisterAdapterDataObserver(mDataSetChangeObserver);
+        }
         mAdapter = newAdapter;
         if (tabLayoutMediator != null) {
             tabLayoutMediator.onAdapterChanged(oldAdapter, newAdapter);
+        }
+        if (mAdapter != null) {
+            if (mDataSetChangeObserver == null) {
+                mDataSetChangeObserver = new DataSetChangeObserver();
+            }
+            mAdapter.registerAdapterDataObserver(mDataSetChangeObserver);
+            setQueueTails(new int[]{mAdapter.getItemCount() - 1}, null);
         }
     }
 
@@ -277,9 +301,6 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
     public void onLayoutChildren(Recycler recycler, State state) {
         if (getItemCount() <= 0 || state.isPreLayout()) {
             return;
-        }
-        if (queueTailIndexes == null) {
-            setQueueTails(new int[]{getItemCount() - 1}, null);
         }
         if (mPendingSavedState != null || mPendingScrollPosition != RecyclerView.NO_POSITION) {
             if (state.getItemCount() == 0) {
@@ -855,47 +876,6 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
             i++;
         }
         return setQueueTails(queueTails, fullSpanIndexes);
-    }
-
-    @Override
-    public void onItemsAdded(@NonNull RecyclerView recyclerView, int positionStart, int itemCount) {
-        super.onItemsAdded(recyclerView, positionStart, itemCount);
-        if (queueTailIndexes == null) return;
-        int length = queueTailIndexes.length;
-        boolean changed = false;
-        for (int i = 0; i < length; i++) {
-            int position = queueTailIndexes[i];
-            if (positionStart <= position) {
-                queueTailIndexes[i] += itemCount;
-                changed = true;
-            }
-        }
-        if (changed) {
-            updatePageBorders();
-        }
-    }
-
-    @Override
-    public void onItemsRemoved(@NonNull RecyclerView recyclerView, int positionStart, int itemCount) {
-        super.onItemsRemoved(recyclerView, positionStart, itemCount);
-        if (queueTailIndexes == null) return;
-        int positionEnd = positionStart + itemCount;
-        int length = queueTailIndexes.length;
-        boolean changed = false;
-        for (int i = 0; i < length; i++) {
-            int position = queueTailIndexes[i];
-            if (positionStart <= position) {
-                if (positionEnd <= position) {
-                    queueTailIndexes[i] -= itemCount;
-                } else {
-                    queueTailIndexes[i] -= positionEnd - position + 1;
-                }
-                changed = true;
-            }
-        }
-        if (changed) {
-            updatePageBorders();
-        }
     }
 
     public int[] setQueueTails(int[] queueTailIndexes, @Nullable int[] fullSpanIndexes) {
@@ -1750,6 +1730,57 @@ public class GridPagerLayoutManager extends RecyclerView.LayoutManager implement
 
 
         public void onPageCountChange(int pageCount) {
+        }
+    }
+
+    private class DataSetChangeObserver extends RecyclerView.AdapterDataObserver {
+        @Override
+        public void onChanged() {
+            int itemCount = mAdapter.getItemCount();
+            if (itemCount > 0) {
+                setQueueTails(new int[]{itemCount - 1}, null);
+            }
+        }
+
+        @Override
+        public final void onItemRangeInserted(int positionStart, int itemCount) {
+            if (queueTailIndexes == null) {
+                queueTailIndexes = new int[]{-1};
+            }
+            int length = queueTailIndexes.length;
+            boolean changed = false;
+            for (int i = 0; i < length; i++) {
+                int position = queueTailIndexes[i];
+                if (positionStart <= position || position == -1) {
+                    queueTailIndexes[i] += itemCount;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                updatePageBorders();
+            }
+        }
+
+        @Override
+        public final void onItemRangeRemoved(int positionStart, int itemCount) {
+            if (queueTailIndexes == null) return;
+            int positionEnd = positionStart + itemCount;
+            int length = queueTailIndexes.length;
+            boolean changed = false;
+            for (int i = 0; i < length; i++) {
+                int position = queueTailIndexes[i];
+                if (positionStart <= position) {
+                    if (positionEnd <= position) {
+                        queueTailIndexes[i] -= itemCount;
+                    } else {
+                        queueTailIndexes[i] -= positionEnd - position + 1;
+                    }
+                    changed = true;
+                }
+            }
+            if (changed) {
+                updatePageBorders();
+            }
         }
     }
 
