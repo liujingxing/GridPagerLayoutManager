@@ -45,7 +45,7 @@ class GridPagerActivity : FragmentActivity(), View.OnClickListener {
 
         val queues = LinkedHashMap<String, List<Int>>()
         val dataList = mutableListOf<Int>()
-        for (i in 0 until 4) {
+        for (i in 0 until 17) {
             dataList.add(i)
         }
         queues["队列1"] = dataList
@@ -55,7 +55,7 @@ class GridPagerActivity : FragmentActivity(), View.OnClickListener {
         val totalList = mutableListOf<Int>()
         queues.values.forEach { totalList.addAll(it) }
         recyclerView.adapter = NumberAdapter(totalList)
-        pageLayoutManager.setQueueInfo(queues.values, intArrayOf(8))
+        pageLayoutManager.setQueueInfo(queues.values, intArrayOf(34))
         pageLayoutManager.attach(indicatorView)
         pageLayoutManager.attach(tabLayout) { tab, position ->
             tab.setText(queues.keys.toList()[position])
